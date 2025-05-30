@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Solar Efficiency Predictor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Solar Water Heater Efficiency Forecast</h1>
+  <form id="predictForm">
+    <label for="forecastDate">Select Forecast Date:</label>
+    <input type="date" id="forecastDate" name="date" required>
+    <button type="submit">Generate Forecast</button>
+  </form>
+  <canvas id="forecastChart" width="800" height="400"></canvas>
+  <div id="recommendations"></div>
+  <script>
+    document.getElementById('forecastDate').valueAsDate = new Date();
+    document.getElementById('predictForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const date = document.getElementById('forecastDate').value;
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ date })
+      });
+      const data = await res.json();
+      const ctx = document.getElementById('forecastChart').getContext('2d');
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.forecast.map(f => `${f.hour}:00`),
+          datasets: [
+            {
+              label: 'Predicted Efficiency (%)',
+              data: data.forecast.map(f => f.efficiency),
+              borderColor: '#4caf50',
+              backgroundColor: 'rgba(76, 175, 80, 0.1)',
+              fill: true,
+              tension: 0.4,
+              yAxisID: 'y1'
+            },
+            {
+              label: 'Solar Irradiance (W/m²)',
+              data: data.forecast.map(f => f.irradiance),
+              borderColor: '#ffa000',
+              backgroundColor: 'rgba(255, 160, 0, 0.1)',
+              fill: true,
+              tension: 0.4,
+              yAxisID: 'y2'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y1: { position: 'left', beginAtZero: true },
+            y2: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+      const list = data.best_hours.map(h => `<li>${h}:00</li>`).join('');
+      document.getElementById('recommendations').innerHTML = `<h3>Best Time Slots for Hot Water</h3><ul>${list}</ul>`;
+    });
+  </script>
+</body>
+</html>
