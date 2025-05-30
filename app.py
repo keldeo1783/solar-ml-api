@@ -99,7 +99,7 @@ def predict():
 
     except Exception as e:
         print("❌ Exception during prediction:", e)
-    return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == '__main__':
