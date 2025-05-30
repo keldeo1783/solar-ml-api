@@ -28,12 +28,14 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    print("✅ /predict POST received")
     data = request.json
     try:
         user_date = data['date']
         forecast = []
 
         url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={LAT},{LON}&days=3&aqi=no&alerts=no"
+        print(f"Request body: {data}")
         resp = requests.get(url, timeout=5)
         weather_data = resp.json()
 
